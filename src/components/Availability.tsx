@@ -1,8 +1,6 @@
 import { InputNumber, Table, Row, Col } from 'antd';
 import React, { useState } from 'react';
-import { calculateDowntime } from './fn';
-
-const PRECISION = 3;
+import { calculateDowntime, formatTimeToMetric } from './fn';
 
 export const AvailabilityTable: React.FC<{availability: number}> = (props) => {
   const { availability } = props;
@@ -19,13 +17,15 @@ export const AvailabilityTable: React.FC<{availability: number}> = (props) => {
       key: 'minutesPerDay',
       name: 'Minutes Per Day',
       shorthand: 'minutes/day',
-      value: downtime.minutesPerDay,
+      // value: downtime.minutesPerDay,
+      value: downtime.secondsPerDay,
     },
     {
       key: 'hoursPerDay',
       name: 'Hours Per Day',
       shorthand: 'hours/day',
-      value: downtime.hoursPerDay,
+      // value: downtime.hoursPerDay,
+      value: downtime.secondsPerDay,
     },
     {
       key: 'secondsPerWeek',
@@ -37,13 +37,15 @@ export const AvailabilityTable: React.FC<{availability: number}> = (props) => {
       key: 'minutesPerWeek',
       name: 'Minutes Per Week',
       shorthand: 'minutes/week',
-      value: downtime.minutesPerWeek,
+      // value: downtime.minutesPerWeek,
+      value: downtime.secondsPerWeek,
     },
     {
       key: 'hoursPerWeek',
       name: 'Hours Per Week',
       shorthand: 'hours/week',
-      value: downtime.hoursPerWeek,
+      // value: downtime.hoursPerWeek,
+      value: downtime.secondsPerWeek,
     },
     {
       key: 'secondsPerMonth',
@@ -54,14 +56,16 @@ export const AvailabilityTable: React.FC<{availability: number}> = (props) => {
     {
       key: 'minutesPerMonth',
       name: 'Minutes Per Month',
-      shorthand: 'weeks/month',
-      value: downtime.minutesPerMonth,
+      shorthand: 'minutes/month',
+      // value: downtime.minutesPerMonth,
+      value: downtime.secondsPerMonth,
     },
     {
       key: 'hoursPerMonth',
       name: 'Hours Per Month',
       shorthand: 'hours/month',
-      value: downtime.hoursPerMonth,
+      // value: downtime.hoursPerMonth,
+      value: downtime.secondsPerMonth,
     },
     {
       key: 'secondsPerYear',
@@ -73,13 +77,15 @@ export const AvailabilityTable: React.FC<{availability: number}> = (props) => {
       key: 'minutesPerYear',
       name: 'Minutes Per Year',
       shorthand: 'minutes/year',
-      value: downtime.minutesPerYear,
+      // value: downtime.minutesPerYear,
+      value: downtime.secondsPerYear,
     },
     {
       key: 'hoursPerYear',
       name: 'Hours Per Year',
       shorthand: 'hours/year',
-      value: downtime.hoursPerYear,
+      // value: downtime.hoursPerYear,
+      value: downtime.secondsPerYear,
     },
   ];
 
@@ -90,9 +96,12 @@ export const AvailabilityTable: React.FC<{availability: number}> = (props) => {
     },
     {
       title: 'Downtime',
-      dataIndex: 'value',
       align: 'right',
-      render: (value: number) => value.toFixed(PRECISION),
+      // render: (value: number) => value.toFixed(PRECISION),
+      render: (row: any) => {
+        const [metric] = row.shorthand.split('/');
+        return formatTimeToMetric(Math.ceil(row.value), metric);
+      },
     },
     {
       title: 'Shorthand',

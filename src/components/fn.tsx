@@ -134,3 +134,40 @@ export function getDowntimeFromAvailbility(availability: number, metric: string)
       return 0;
   }
 }
+
+export function formatTime(time: number) {
+  const seconds = Math.ceil(time % 60);
+  const minutes = Math.floor(time / 60 % 60);
+  const hours = Math.floor(time / 3600);
+
+  let str = '';
+  let displayMinutes = hours || minutes;
+  if (hours) {
+    str += `${hours}h`;
+  }
+  if (displayMinutes) {
+    str += `${minutes}m`
+  }
+  const ms = seconds === 0 ? '' : ` x ${(time / 1000).toFixed(5)}`;
+  return `${str}${seconds}${ms}s`;
+}
+
+export function formatTimeToMetric(time: number, metric: string) {
+  switch (metric) {
+    case 'seconds':
+      return `${time}s`;
+
+    case 'minutes': {
+      const minutes = Math.floor(time / 60);
+
+      return `${minutes}m${time % 60}s`;
+    }
+
+    case 'hours': {
+      const minutes = Math.floor(time / 60 % 60);
+      const hours = Math.floor(time / (60 * 60) % 60);
+
+      return `${hours}h${minutes}m${Math.ceil(time % 60)}s`;
+    }
+  }
+}
