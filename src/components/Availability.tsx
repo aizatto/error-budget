@@ -1,40 +1,8 @@
 import { InputNumber, Table, Row, Col } from 'antd';
 import React, { useState } from 'react';
+import { calculateDowntime } from './fn';
 
-const DAYS_IN_MONTH = 31;
-const DAYS_IN_YEAR = 365;
 const PRECISION = 3;
-
-export function calculateDowntime(oriAvailability: number) {
-  let availability = oriAvailability >= 100
-    ? 100
-    : oriAvailability;
-
-  availability = availability <= 0
-    ? 0
-    : availability;
-
-  const percentage = (100 - availability) / 100;
-
-  let downtime = {
-    secondsPerDay: percentage * 24 * 60 * 60,
-    minutesPerDay: percentage * 24 * 60,
-    hoursPerDay: percentage * 24,
-  }
-
-  return {
-    ...downtime,
-    secondsPerWeek: downtime.secondsPerDay * 7,
-    minutesPerWeek: downtime.minutesPerDay * 7,
-    hoursPerWeek: downtime.hoursPerDay * 7,
-    secondsPerMonth: downtime.secondsPerDay * DAYS_IN_MONTH,
-    minutesPerMonth: downtime.minutesPerDay * DAYS_IN_MONTH,
-    hoursPerMonth: downtime.hoursPerDay * DAYS_IN_MONTH,
-    secondsPerYear: downtime.secondsPerDay * DAYS_IN_YEAR,
-    minutesPerYear: downtime.minutesPerDay * DAYS_IN_YEAR,
-    hoursPerYear: downtime.hoursPerDay * DAYS_IN_YEAR,
-  };
-}
 
 export const AvailabilityTable: React.FC<{availability: number}> = (props) => {
   const { availability } = props;

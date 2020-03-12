@@ -1,75 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Select, InputNumber, Row, Col } from 'antd';
 import { AvailabilityTable } from './Availability';
+import { calculateAvailability, getDowntimeFromAvailbility } from './fn';
 
 const { Option } = Select;
 
 export const ErrorBudget: React.FC = () => {
-  const [errorBudget, setErrorBudget] = useState(60);
   const [metric, setMetric] = useState('seconds/day');
+  const [errorBudget, setErrorBudget] = useState(60);
+  const availability = calculateAvailability(errorBudget, metric);
+  
+  const errorBudgetRef = useRef<any>();
 
-  let downtime = 0;
-  switch (metric) {
-    case 'seconds/day':
-      downtime = errorBudget / (24 * 60 * 60);
-      break;
- 
-    case 'minutes/day':
-      downtime = errorBudget / (24 * 60);
-      break;
+  const setErrorBudgetRef = (value: number) => {
+    const current = errorBudgetRef.current;
+    if (!current) {
+      return;
+    }
 
-    case 'hours/day':
-      downtime = errorBudget / 24;
-      break;
-
-    case 'seconds/week':
-      downtime = errorBudget / (24 * 60 * 60 * 7);
-      break;
- 
-    case 'minutes/week':
-      downtime = errorBudget / (24 * 60 * 7);
-      break;
-
-    case 'hours/week':
-      downtime = errorBudget / (24 * 7);
-      break;
-
-    case 'seconds/month':
-      downtime = errorBudget / (24 * 60 * 60 * 31);
-      break;
- 
-    case 'minutes/month':
-      downtime = errorBudget / (24 * 60 * 31);
-      break;
-
-    case 'hours/month':
-      downtime = errorBudget / (24 * 31);
-      break;
-
-    case 'seconds/year':
-      downtime = errorBudget / (24 * 60 * 60 * 365);
-      break;
- 
-    case 'minutes/year':
-      downtime = errorBudget / (24 * 60 * 365);
-      break;
-
-    case 'hours/year':
-      downtime = errorBudget / (24 * 365);
-      break;
+    const downtime = getDowntimeFromAvailbility(value, metric);
+    // current.inputNumberRef.input.value = downtime;
+    setErrorBudget(downtime);
   }
-
-  downtime = downtime * 100;
-  const availability = 100 - downtime;
 
   return (
     <>
       <Row justify="center">
-        <Col span="6">
+        <Col span="8">
           <div>
             <InputNumber
+              ref={errorBudgetRef}
               size="large"
-              defaultValue={errorBudget}
+              value={errorBudget}
               min={0}
               step={0.1}
               onChange={(value) => value && setErrorBudget(value)}
@@ -77,8 +39,11 @@ export const ErrorBudget: React.FC = () => {
             <Select
               defaultValue={metric}
               size="large"
-              onChange={(newMetric) => setMetric(newMetric)}
-              >
+              onChange={(newMetric) => {
+                const downtime = getDowntimeFromAvailbility(availability, newMetric);
+                setMetric(newMetric);
+                setErrorBudget(downtime);
+              }}>
               <Option value="seconds/day">
                 seconds/day
               </Option>
@@ -121,7 +86,18 @@ export const ErrorBudget: React.FC = () => {
             <InputNumber
               size="large"
               value={availability}
-              readOnly
+              min={0}
+              max={100}
+              step={0.1}
+              style={{width: '14rem'}}
+              onChange={(value) => {
+                if (!value) {
+                  return;
+                }
+
+                // setErrorBudgetRef(getDowntimeFromAvailbility(value, metric));
+                setErrorBudgetRef(value);
+              }}
             />
             %
           </div>
