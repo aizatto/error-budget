@@ -1,11 +1,11 @@
 import { InputNumber, Table, Row, Col } from 'antd';
 import React, { useState } from 'react';
-import { calculateDowntime, formatTimeToMetric } from './fn';
+import { calculateDowntimeTableFromAvailbility, formatTimeToMetric, DowntimeTable } from './fn';
 
 export const AvailabilityTable: React.FC<{availability: number}> = (props) => {
   const { availability } = props;
 
-  const downtime = calculateDowntime(availability);
+  const downtime = calculateDowntimeTableFromAvailbility(availability);
   const downtimeDataSource = [
     {
       key: 'secondsPerDay',
@@ -90,10 +90,10 @@ export const AvailabilityTable: React.FC<{availability: number}> = (props) => {
   ];
 
   const columns = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-    },
+    // {
+    //   title: 'Name',
+    //   dataIndex: 'name',
+    // },
     {
       title: 'Downtime',
       align: 'right',
@@ -111,6 +111,124 @@ export const AvailabilityTable: React.FC<{availability: number}> = (props) => {
 
   return (
     <Table
+      pagination={false}
+      dataSource={downtimeDataSource}
+      // @ts-ignore
+      columns={columns}
+    />
+  );
+}
+
+export const FormatTime: React.FC<{time: number}> = (props) => {
+  const [hover, setHover] = useState(false);
+  const { time } = props;
+
+  const seconds = formatTimeToMetric(time, 'seconds');
+  const minutes = formatTimeToMetric(time, 'minutes');
+  const hours = formatTimeToMetric(time, 'hours');
+
+  const content = hover
+    ? <>
+        {hours !== minutes ? `${hours} or ` : ''}
+        {minutes}
+        {' or '}
+        {seconds}
+      </>
+    : hours;
+
+
+  return (
+    <div
+      // title={title}
+      onMouseOver={() => setHover(true)}
+      onMouseOut={() =>setHover(false)}
+      >
+      {content}
+    </div>
+  );
+}
+
+export const AvailabilityTable2: React.FC<{downtime: DowntimeTable}> = (props) => {
+  const { downtime } = props;
+
+  // const downtime = calculateDowntimeTableFromAvailbility(availability);
+  const downtimeDataSource = [
+    {
+      key: 'hoursPerDay',
+      name: 'Hours Per Day',
+      shorthand: 'hours/day',
+      // value: downtime.hoursPerDay,
+      value: downtime.secondsPerDay,
+    },
+    {
+      key: 'hoursPerWeek',
+      name: 'Hours Per Week',
+      shorthand: 'hours/week',
+      // value: downtime.hoursPerWeek,
+      value: downtime.secondsPerWeek,
+    },
+    {
+      key: 'hoursPerMonth',
+      name: 'Hours Per Month',
+      shorthand: 'hours/month',
+      // value: downtime.hoursPerMonth,
+      value: downtime.secondsPerMonth,
+    },
+    {
+      key: 'hoursPerYear',
+      name: 'Hours Per Year',
+      shorthand: 'hours/year',
+      // value: downtime.hoursPerYear,
+      value: downtime.secondsPerYear,
+    },
+  ];
+
+  const columns = [
+    {
+      title: 'Uptime',
+      align: 'right',
+      render: (row: any) => {
+        const [,metric] = row.shorthand.split('/');
+        let secondsInMetric = 86400;
+        switch (metric) {
+          case 'day':
+            break;
+
+          case 'week':
+            secondsInMetric *= 7;
+            break;
+
+          case 'month':
+            secondsInMetric *= 31;
+            break;
+
+          case 'year':
+            secondsInMetric *= 365;
+            break;
+        }
+        return <FormatTime time={secondsInMetric - row.value} />;
+      },
+    },
+    {
+      title: 'Downtime',
+      align: 'right',
+      render: (row: any) => {
+        return <FormatTime time={row.value} />;
+      },
+    },
+    {
+      title: 'Shorthand',
+      dataIndex: 'shorthand',
+      render: (shorthand: string) => {
+        const [,metric] = shorthand.split('/')
+        return `per ${metric}`;
+      },
+    },
+  ];
+
+  return (
+    <Table
+      tableLayout="fixed"
       pagination={false}
       dataSource={downtimeDataSource}
       // @ts-ignore
