@@ -126,15 +126,17 @@ export const FormatTime: React.FC<{time: number}> = (props) => {
   const seconds = formatTimeToMetric(time, 'seconds');
   const minutes = formatTimeToMetric(time, 'minutes');
   const hours = formatTimeToMetric(time, 'hours');
+  const days = formatTimeToMetric(time, 'days');
 
   const content = hover
     ? <>
-        {hours !== minutes ? `${hours} or ` : ''}
+        {days !== hours ? `${days}, or ` : ''}
+        {hours !== minutes ? `${hours}, or ` : ''}
         {minutes}
-        {' or '}
+        {', or '}
         {seconds}
       </>
-    : hours;
+    : days;
 
 
   return (

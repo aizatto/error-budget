@@ -379,7 +379,7 @@ export function formatTimeToMetric(time: number, metric: string) {
     case 'minutes': {
       const minutes = Math.floor(time / 60);
 
-      const minutesStr = minutes ? `${minutes}m` : ''
+      const minutesStr = minutes ? `${minutes}m ` : ''
 
       return `${minutesStr}${toFixed(time % 60)}s`;
     }
@@ -388,9 +388,20 @@ export function formatTimeToMetric(time: number, metric: string) {
       const minutes = Math.floor(time / 60 % 60);
       const hours = Math.floor(time / (60 * 60));
 
-      const hoursStr = hours ? `${hours}h` : ''
+      const hoursStr = hours ? `${hours}h ` : ''
 
-      return `${hoursStr}${minutes}m${toFixed(time % 60)}s`;
+      return `${hoursStr}${minutes}m ${toFixed(time % 60)}s`;
+    }
+
+    case 'days': {
+      const minutes = Math.floor(time / 60 % 60);
+      const hours = Math.floor(time / (60 * 60) % 24);
+      const days = Math.floor(time / (60 * 60 * 24));
+
+      const hoursStr = hours ? `${hours}h ` : ''
+      const daysStr = days ? `${days}d ` : ''
+
+      return `${daysStr}${hoursStr}${minutes}m ${toFixed(time % 60)}s`;
     }
   }
 }
