@@ -1,17 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { Select, InputNumber, Row, Col } from 'antd';
 import { AvailabilityTable2 } from './Availability';
-import { calculateAvailability, calculateSecondsFromMetric, getDowntimeFromSeconds, getDowntimeFromAvailbility, calculateDowntimeTableFromMetric } from './fn';
+import { calculateAvailability, getDowntimeFromAvailbility, calculateDowntimeTableFromMetric, changeDisplayFromMetric, Ratio, getDisplay } from './fn';
 
 const { Option } = Select;
 
 export const ErrorBudget: React.FC = () => {
-  const [metric, setMetric] = useState('seconds/day');
-  const [secondsPerDay, setSecondsPerDay] = useState(60);
+  const [metric, setMetric] = useState<Ratio>(Ratio.SECONDS_PER_DAY);
   const [display, setDisplay] = useState(60);
   const availability = calculateAvailability(display, metric);
-  const [metric2,] = metric.split('/');
-  const downtimeTable = calculateDowntimeTableFromMetric(display, metric2);
+  // @ts-ignore
+  const downtimeTable = calculateDowntimeTableFromMetric(display, metric);
   
   const errorBudgetRef = useRef<any>();
 
@@ -21,10 +20,8 @@ export const ErrorBudget: React.FC = () => {
       return;
     }
 
-    const newSeconds = getDowntimeFromAvailbility(newAvailability, 'seconds/day');
     const newDisplay = getDowntimeFromAvailbility(newAvailability, metric);
     current.inputNumberRef.input.value = newDisplay;
-    setSecondsPerDay(newSeconds);
     setDisplay(newDisplay);
   }
 
@@ -43,20 +40,17 @@ export const ErrorBudget: React.FC = () => {
                 if (!value) {
                   return;
                 }
-                const [newMetric, ] = metric.split('/');
-                const newSeconds = calculateSecondsFromMetric(value, newMetric);
-                const newDisplay = getDowntimeFromSeconds(newSeconds, metric);
-                setSecondsPerDay(newSeconds)
-                setDisplay(newDisplay);
+                const newDowntimeTable = calculateDowntimeTableFromMetric(value, metric);
+                setDisplay(getDisplay(newDowntimeTable, metric));
               }}
             />
             <Select
               defaultValue={metric}
               size="large"
               onChange={(newMetric) => {
-                const downtime = getDowntimeFromSeconds(secondsPerDay, newMetric);
+                const newDisplay = changeDisplayFromMetric(display, metric, newMetric);
                 setMetric(newMetric);
-                setDisplay(downtime);
+                setDisplay(newDisplay);
               }}>
               <Option value="seconds/day">
                 seconds/day
@@ -109,7 +103,6 @@ export const ErrorBudget: React.FC = () => {
                   return;
                 }
 
-                // setErrorBudgetRef(getDowntimeFromAvailbility(value, metric));
                 setAvailability(value);
               }}
             />

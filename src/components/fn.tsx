@@ -3,7 +3,34 @@ const DAYS_IN_MONTH = 31;
 const DAYS_IN_YEAR = 365;
 const PRECISION = 5;
 
-export interface DowntimeTable {
+export enum UnitOfTime {
+  SECONDS = 'seconds',
+  MINUTES = 'minutes',
+  HOURS = 'hours',
+};
+
+export enum Ratio {
+  SECONDS_PER_DAY = 'seconds/day',
+  MINUTES_PER_DAY = 'minutes/day',
+  HOURS_PER_DAY = 'hours/day',
+  SECONDS_PER_WEEK = 'seconds/week',
+  MINUTES_PER_WEEK = 'minutes/week',
+  HOURS_PER_WEEK = 'hours/week',
+  SECONDS_PER_MONTH = 'seconds/month',
+  MINUTES_PER_MONTH = 'minutes/month',
+  HOURS_PER_MONTH = 'hours/month',
+  SECONDS_PER_YEAR = 'seconds/year',
+  MINUTES_PER_YEAR = 'minutes/year',
+  HOURS_PER_YEAR = 'hours/year',
+};
+
+export interface DowntimeTableDay {
+  secondsPerDay: number,
+  minutesPerDay: number,
+  hoursPerDay: number,
+}
+
+export interface DowntimeTable extends DowntimeTableDay {
   secondsPerDay: number,
   minutesPerDay: number,
   hoursPerDay: number,
@@ -18,6 +45,22 @@ export interface DowntimeTable {
   hoursPerYear: number,
 }
 
+export function expandDownTimeTable(downtime: DowntimeTableDay): DowntimeTable {
+   const table = {
+    ...downtime,
+    secondsPerWeek: downtime.secondsPerDay * 7,
+    minutesPerWeek: downtime.minutesPerDay * 7,
+    hoursPerWeek: downtime.hoursPerDay * 7,
+    secondsPerMonth: downtime.secondsPerDay * DAYS_IN_MONTH,
+    minutesPerMonth: downtime.minutesPerDay * DAYS_IN_MONTH,
+    hoursPerMonth: downtime.hoursPerDay * DAYS_IN_MONTH,
+    secondsPerYear: downtime.secondsPerDay * DAYS_IN_YEAR,
+    minutesPerYear: downtime.minutesPerDay * DAYS_IN_YEAR,
+    hoursPerYear: downtime.hoursPerDay * DAYS_IN_YEAR,
+  };
+  return table;
+}
+
 export function calculateDowntimeTableFromAvailbility(oriAvailability: number): DowntimeTable {
   let availability = oriAvailability >= 100
     ? 100
@@ -29,91 +72,114 @@ export function calculateDowntimeTableFromAvailbility(oriAvailability: number): 
 
   const percentage = (100 - availability) / 100;
 
-  let downtime = {
+  return expandDownTimeTable({
     secondsPerDay: Math.ceil(percentage * 24 * 60 * 60),
     minutesPerDay: percentage * 24 * 60,
     hoursPerDay: percentage * 24,
-  }
-
-  const table = {
-    ...downtime,
-    secondsPerWeek: downtime.secondsPerDay * 7,
-    minutesPerWeek: downtime.minutesPerDay * 7,
-    hoursPerWeek: downtime.hoursPerDay * 7,
-    secondsPerMonth: downtime.secondsPerDay * DAYS_IN_MONTH,
-    minutesPerMonth: downtime.minutesPerDay * DAYS_IN_MONTH,
-    hoursPerMonth: downtime.hoursPerDay * DAYS_IN_MONTH,
-    secondsPerYear: downtime.secondsPerDay * DAYS_IN_YEAR,
-    minutesPerYear: downtime.minutesPerDay * DAYS_IN_YEAR,
-    hoursPerYear: downtime.hoursPerDay * DAYS_IN_YEAR,
-  };
-  return table;
+  });
 }
 
 export function calculateDowntimeTableFromSeconds(time: number): DowntimeTable {
   const percentage = time / (24 * 60 * 60);
 
-  let downtime = {
+  return expandDownTimeTable({
     secondsPerDay: time,
     minutesPerDay: percentage * 24 * 60,
     hoursPerDay: percentage * 24,
-  }
-
-  const table = {
-    ...downtime,
-    secondsPerWeek: downtime.secondsPerDay * 7,
-    minutesPerWeek: downtime.minutesPerDay * 7,
-    hoursPerWeek: downtime.hoursPerDay * 7,
-    secondsPerMonth: downtime.secondsPerDay * DAYS_IN_MONTH,
-    minutesPerMonth: downtime.minutesPerDay * DAYS_IN_MONTH,
-    hoursPerMonth: downtime.hoursPerDay * DAYS_IN_MONTH,
-    secondsPerYear: downtime.secondsPerDay * DAYS_IN_YEAR,
-    minutesPerYear: downtime.minutesPerDay * DAYS_IN_YEAR,
-    hoursPerYear: downtime.hoursPerDay * DAYS_IN_YEAR,
-  };
-  return table;
+  });
 }
-export function calculateDowntimeTableFromMetric(timePerDay: number, metric: string): DowntimeTable {
-  let downtime = {
-    secondsPerDay: timePerDay,
-    minutesPerDay: timePerDay / 24 * 60,
-    hoursPerDay: timePerDay / 24 * 60 * 60,
-  }
-
+export function calculateDowntimeTableFromMetric(timePerMetric: number, metric: Ratio): DowntimeTable {
   switch (metric) {
-    case 'minutes':
-      downtime = {
-        secondsPerDay: timePerDay * 60,
-        minutesPerDay: timePerDay,
-        hoursPerDay: timePerDay / (24 * 60),
-      }
-      break;
+    case 'seconds/day':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric,
+        minutesPerDay: timePerMetric / 60,
+        hoursPerDay: timePerMetric / (60 * 60)
+      });
 
-    case 'hours':
-      downtime = {
-        secondsPerDay: timePerDay * 60 * 60,
-        minutesPerDay: timePerDay * 60,
-        hoursPerDay: timePerDay,
-      }
-      break;
+    case 'minutes/day':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric * 60,
+        minutesPerDay: timePerMetric,
+        hoursPerDay: timePerMetric / 60,
+      });
+
+    case 'hours/day':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric * 60 * 60,
+        minutesPerDay: timePerMetric * 60,
+        hoursPerDay: timePerMetric,
+      });
+
+    case 'seconds/week':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric / 7,
+        minutesPerDay: timePerMetric / 60 / 7,
+        hoursPerDay: timePerMetric / (60 * 60) / 7,
+      });
+
+    case 'minutes/week':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric * 60 /7,
+        minutesPerDay: timePerMetric / 7,
+        hoursPerDay: timePerMetric / 60 / 7,
+      });
+
+    case 'hours/week':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric * 60 * 60 / 7,
+        minutesPerDay: timePerMetric * 60 / 7,
+        hoursPerDay: timePerMetric / 7,
+      });
+
+    case 'seconds/month':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric / 31,
+        minutesPerDay: timePerMetric / 60 / 31,
+        hoursPerDay: timePerMetric / (60 * 60 / 31),
+      });
+
+    case 'minutes/month':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric * 60 / 31,
+        minutesPerDay: timePerMetric / 31,
+        hoursPerDay: timePerMetric / 60 / 31,
+      });
+
+    case 'hours/month':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric * 60 * 60 / 31,
+        minutesPerDay: timePerMetric * 60 / 31,
+        hoursPerDay: timePerMetric / 31,
+      });
+
+    case 'seconds/year':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric / 365,
+        minutesPerDay: timePerMetric / 60 / 365,
+        hoursPerDay: timePerMetric / (60 * 60) / 365,
+      });
+
+    case 'minutes/year':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric * 60 / 365,
+        minutesPerDay: timePerMetric / 365,
+        hoursPerDay: timePerMetric / 60 / 365,
+      });
+
+    case 'hours/year':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric * 60 * 60 / 365,
+        minutesPerDay: timePerMetric * 60 / 365,
+        hoursPerDay: timePerMetric / 365,
+      });
+
+    default:
+      throw new Error(`Unknown metric: ${metric}`);
   }
-
-  const table = {
-    ...downtime,
-    secondsPerWeek: downtime.secondsPerDay * 7,
-    minutesPerWeek: downtime.minutesPerDay * 7,
-    hoursPerWeek: downtime.hoursPerDay * 7,
-    secondsPerMonth: downtime.secondsPerDay * DAYS_IN_MONTH,
-    minutesPerMonth: downtime.minutesPerDay * DAYS_IN_MONTH,
-    hoursPerMonth: downtime.hoursPerDay * DAYS_IN_MONTH,
-    secondsPerYear: downtime.secondsPerDay * DAYS_IN_YEAR,
-    minutesPerYear: downtime.minutesPerDay * DAYS_IN_YEAR,
-    hoursPerYear: downtime.hoursPerDay * DAYS_IN_YEAR,
-  };
-  return table;
 }
 
-export function calculateAvailability(errorBudget: number, metric: string) {
+export function calculateAvailability(errorBudget: number, metric: Ratio) {
   let downtime = 0;
   switch (metric) {
     case 'seconds/day':
@@ -170,7 +236,7 @@ export function calculateAvailability(errorBudget: number, metric: string) {
   return availability;
 }
 
-export function getDowntimeFromAvailbility(availability: number, metric: string) {
+export function getDowntimeFromAvailbility(availability: number, metric: Ratio) {
   const downtime = calculateDowntimeTableFromAvailbility(availability);
   switch (metric) {
     case 'seconds/day':
@@ -214,8 +280,7 @@ export function getDowntimeFromAvailbility(availability: number, metric: string)
   }
 }
 
-export function getDowntimeFromSeconds(time: number, metric: string) {
-  const downtime = calculateDowntimeTableFromSeconds(time);
+export function getDisplay(downtime: DowntimeTable, metric: Ratio): number {
   switch (metric) {
     case 'seconds/day':
       return downtime.secondsPerDay;
@@ -254,12 +319,17 @@ export function getDowntimeFromSeconds(time: number, metric: string) {
       return downtime.hoursPerYear;
     
     default:
-      return 0;
+      throw new Error(`Unknown metric: ${metric}`);
   }
 }
 
-export function calculateSecondsFromMetric(time: number, metric: string) {
-  switch (metric) {
+export function changeDisplayFromMetric(display: number, oldMetric: Ratio, newMetric: Ratio): number {
+  const downtime = calculateDowntimeTableFromMetric(display, oldMetric);
+  return getDisplay(downtime, newMetric);
+}
+
+export function calculateSecondsFromMetric(time: number, unitOfTime: UnitOfTime) {
+  switch (unitOfTime) {
     case 'seconds':
       return time;
 
@@ -270,7 +340,7 @@ export function calculateSecondsFromMetric(time: number, metric: string) {
       return time * 60 * 60;
 
     default:
-      return 0;
+      throw new Error(`Unknown metric: ${unitOfTime}`);
   }
 }
 
