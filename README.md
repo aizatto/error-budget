@@ -13,3 +13,4 @@ Keywords:
 Alternatives:
 - https://uptime.is/
 - https://www.hostingmanual.net/uptime-calculator/
+- http://www.slatools.com/sla-uptime-calculator
