@@ -19,6 +19,9 @@ export enum Ratio {
   SECONDS_PER_MONTH = 'seconds/month',
   MINUTES_PER_MONTH = 'minutes/month',
   HOURS_PER_MONTH = 'hours/month',
+  SECONDS_PER_NINETY_DAYS= 'seconds/90 days',
+  MINUTES_PER_NINETY_DAYS = 'minutes/90 days',
+  HOURS_PER_NINETY_DAYS = 'hours/90 days',
   SECONDS_PER_YEAR = 'seconds/year',
   MINUTES_PER_YEAR = 'minutes/year',
   HOURS_PER_YEAR = 'hours/year',
@@ -40,6 +43,9 @@ export interface DowntimeTable extends DowntimeTableDay {
   secondsPerMonth: number,
   minutesPerMonth: number,
   hoursPerMonth: number,
+  secondsPerNinetyDays: number,
+  minutesPerNinetyDays: number,
+  hoursPerNinetyDays: number,
   secondsPerYear: number,
   minutesPerYear: number,
   hoursPerYear: number,
@@ -54,6 +60,9 @@ export function expandDownTimeTable(downtime: DowntimeTableDay): DowntimeTable {
     secondsPerMonth: downtime.secondsPerDay * DAYS_IN_MONTH,
     minutesPerMonth: downtime.minutesPerDay * DAYS_IN_MONTH,
     hoursPerMonth: downtime.hoursPerDay * DAYS_IN_MONTH,
+    secondsPerNinetyDays: downtime.secondsPerDay * 90,
+    minutesPerNinetyDays: downtime.minutesPerDay * 90,
+    hoursPerNinetyDays: downtime.hoursPerDay * 90,
     secondsPerYear: downtime.secondsPerDay * DAYS_IN_YEAR,
     minutesPerYear: downtime.minutesPerDay * DAYS_IN_YEAR,
     hoursPerYear: downtime.hoursPerDay * DAYS_IN_YEAR,
@@ -153,6 +162,27 @@ export function calculateDowntimeTableFromMetric(timePerMetric: number, metric: 
         hoursPerDay: timePerMetric / 31,
       });
 
+    case 'seconds/90 days':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric / 90,
+        minutesPerDay: timePerMetric / 60 / 90,
+        hoursPerDay: timePerMetric / (60 * 60) / 90,
+      });
+
+    case 'minutes/90 days':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric * 60 / 90,
+        minutesPerDay: timePerMetric / 90,
+        hoursPerDay: timePerMetric / 60 / 90,
+      });
+
+    case 'hours/90 days':
+      return expandDownTimeTable({
+        secondsPerDay: timePerMetric * 60 * 60 / 90,
+        minutesPerDay: timePerMetric * 60 / 90,
+        hoursPerDay: timePerMetric / 90,
+      });
+
     case 'seconds/year':
       return expandDownTimeTable({
         secondsPerDay: timePerMetric / 365,
@@ -218,6 +248,18 @@ export function calculateAvailability(errorBudget: number, metric: Ratio) {
       downtime = errorBudget / (24 * 31);
       break;
 
+    case 'seconds/90 days':
+      downtime = errorBudget / (24 * 60 * 60 * 90);
+      break;
+ 
+    case 'minutes/90 days':
+      downtime = errorBudget / (24 * 60 * 90);
+      break;
+
+    case 'hours/90 days':
+      downtime = errorBudget / (24 * 90);
+      break;
+
     case 'seconds/year':
       downtime = errorBudget / (24 * 60 * 60 * 365);
       break;
@@ -228,6 +270,10 @@ export function calculateAvailability(errorBudget: number, metric: Ratio) {
 
     case 'hours/year':
       downtime = errorBudget / (24 * 365);
+      break;
+    
+    default:
+      console.error(`Unkonwn: ${metric}`)
       break;
   }
 
@@ -265,6 +311,15 @@ export function getDowntimeFromAvailbility(availability: number, metric: Ratio) 
 
     case 'hours/month':
       return downtime.hoursPerMonth;
+
+    case 'seconds/90 days':
+      return downtime.secondsPerNinetyDays;
+
+    case 'minutes/90 days':
+      return downtime.minutesPerNinetyDays;
+
+    case 'hours/90 days':
+      return downtime.hoursPerNinetyDays;
 
     case 'seconds/year':
       return downtime.secondsPerYear;
@@ -308,6 +363,15 @@ export function getDisplay(downtime: DowntimeTable, metric: Ratio): number {
 
     case 'hours/month':
       return downtime.hoursPerMonth;
+
+    case 'seconds/90 days':
+      return downtime.secondsPerNinetyDays;
+
+    case 'minutes/90 days':
+      return downtime.minutesPerNinetyDays;
+
+    case 'hours/90 days':
+      return downtime.hoursPerNinetyDays;
 
     case 'seconds/year':
       return downtime.secondsPerYear;

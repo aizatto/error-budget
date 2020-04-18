@@ -79,6 +79,15 @@ export const ErrorBudget: React.FC = () => {
               <Option value="hours/month">
                 hours/month
               </Option>
+              <Option value="seconds/90 days">
+                seconds/90 days
+              </Option>
+              <Option value="minutes/90 days">
+                minutes/90 days
+              </Option>
+              <Option value="hours/90 days">
+                hours/90 days
+              </Option>
               <Option value="seconds/year">
                 seconds/year
               </Option>
